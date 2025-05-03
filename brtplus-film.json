@@ -1,14 +1,14 @@
 [
   {
-    "isim": "Inception",
-    "tür": "Bilim Kurgu",
-    "çıkışYılı": 2010,
-    "kapakURL": "https://example.com/kapak/inception.jpg",
-    "bannerURL": "https://example.com/banner/inception.jpg",
-    "açıklama": "Rüyaların içinde yolculuk yapan bir hırsızın hikayesi.",
-    "puan": 8.8,
-    "dil": "İngilizce",
-    "videoURL": "https://example.com/video/inception.mp4"
+    "isim": "Ters Yüz 2",
+    "tür": "Animasyon",
+    "çıkışYılı": 2024,
+    "kapakURL": "https://lumiere-a.akamaihd.net/v1/images/image_f6a2dfdd.jpeg",
+    "bannerURL": "https://lumiere-a.akamaihd.net/v1/images/image_86fe225a.jpeg",
+    "açıklama": " Merkez'de aniden bir tadilat başlar ve hiç hesapta olmayan yeni Duygular'a yer açılır! Uzun zamandır işleri başarıyla yürüten Neşe, Üzüntü, Öfke, Korku ve Tiksinti, Kaygı geldiğinde neler hissedeceklerini bilemez. Üstelik Kaygı yalnız değildir, beraberinde Utanç, Gıpta ve Bıkkınlık da gelmiştir.",
+    "puan": 7.5,
+    "dil": "Türkçe",
+    "videoURL": "https://pixeldrain.com/api/file/Gr8hqD2d"
   },
 
   {
