@@ -12,30 +12,6 @@
   },
 
   {
-    "isim": "The Godfather",
-    "tür": "Suç",
-    "çıkışYılı": 1972,
-    "kapakURL": "https://example.com/kapak/godfather.jpg",
-    "bannerURL": "https://example.com/banner/godfather.jpg",
-    "açıklama": "İtalyan mafya ailesinin yükselişi ve çöküşü.",
-    "puan": 9.2,
-    "dil": "İngilizce",
-    "videoURL": "https://example.com/video/godfather.mp4"
-  },
-
-  {
-    "isim": "Interstellar",
-    "tür": "Macera",
-    "çıkışYılı": 2014,
-    "kapakURL": "https://example.com/kapak/interstellar.jpg",
-    "bannerURL": "https://example.com/banner/interstellar.jpg",
-    "açıklama": "İnsanlık için yeni bir gezegen arayan bir ekibin yolculuğu.",
-    "puan": 8.6,
-    "dil": "İngilizce",
-    "videoURL": "https://example.com/video/interstellar.mp4"
-  },
-
-  {
     "isim": "Hayrimatör",
     "tür": "Animasyon",
     "çıkışYılı": 2023,
