@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRT+ Film</title>
+    <style>
+        /* Google Fonts Import */
+        @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@900&family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --brand-color: #9933FF; /* Canlı Mor */
+            --background-color: #121212;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --focus-outline-color: #FFFFFF;
+            --animation-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Dinamik Arka Plan --- */
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.4);
+            transform: scale(1.1);
+            transition: background-image var(--animation-speed) ease-in-out;
+            z-index: -1;
+        }
+        
+        /* --- Yükleme Ekranı --- */
+        #loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            z-index: 2000;
+        }
+
+        /* --- Ana Yapı --- */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 4vh 5vw;
+            background: linear-gradient(to top, rgba(18, 18, 18, 1) 20%, rgba(18, 18, 18, 0.5) 70%, transparent 100%);
+        }
+
+        .header .logo {
+            font-family: 'Barlow Black', sans-serif;
+            font-size: 2.5rem;
+            color: var(--brand-color);
+            text-shadow: 0 0 10px var(--brand-color);
+        }
+
+        /* --- Hero Bölümü (Seçili Film Bilgisi) --- */
+        #hero-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: opacity var(--animation-speed) ease;
+        }
+
+        #hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            max-width: 50%;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        #hero-overview {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            max-width: 45%;
+            margin-top: 15px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 4; /* Maksimum 4 satır göster */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- Yatay Film Şeridi --- */
+        #content-carousel {
+            flex-shrink: 0;
+            overflow: hidden;
+            padding-bottom: 20px;
+        }
+
+        #movie-list {
+            display: flex;
+            gap: 20px;
+            transition: transform var(--animation-speed) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .movie-card {
+            width: 185px;
+            aspect-ratio: 2 / 3;
+            background-color: #333;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid transparent;
+            transition: transform var(--animation-speed) ease, border-color var(--animation-speed) ease;
+            flex-shrink: 0;
+        }
+        
+        .movie-card.focused {
+            transform: scale(1.1);
+            border-color: var(--focus-outline-color);
+        }
+        
+        /* --- Video Oynatıcı --- */
+        #player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: none;
+            z-index: 1000;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="background-container"></div>
+    <div id="loader">BRT+ Yükleniyor...</div>
+    
+    <div class="main-container" style="visibility: hidden;">
+        <header class="header">
+            <h1 class="logo">BRT+</h1>
+        </header>
+
+        <section id="hero-section">
+            <h2 id="hero-title"></h2>
+            <p id="hero-overview"></p>
+        </section>
+
+        <section id="content-carousel">
+            <div id="movie-list"></div>
+        </section>
+    </div>
+
+    <div id="player-container">
+        <video id="video-player" controls></video>
+    </div>
+
+    <script>
+        const TMDB_API_KEY = 'f28fc59ebadaf0bf67f9aed2bd6ee8aa';
+        // GitHub'ın ham içerik linkleri bazen önbelleğe alınır, bu yüzden cache-busting için rastgele bir parametre ekliyoruz.
+        const MOVIES_URL = `https://raw.githubusercontent.com/Berathd7777/brtplus-film/refs/heads/main/filmler.txt?t=${new Date().getTime()}`;
+
+        const loader = document.getElementById('loader');
+        const mainContainer = document.querySelector('.main-container');
+        const bgContainer = document.getElementById('background-container');
+        const heroTitle = document.getElementById('hero-title');
+        const heroOverview = document.getElementById('hero-overview');
+        const movieList = document.getElementById('movie-list');
+        const playerContainer = document.getElementById('player-container');
+        const videoPlayer = document.getElementById('video-player');
+
+        let allMoviesData = [];
+        let currentFocusIndex = 0;
+
+        async function fetchMoviesFromFile() {
+            try {
+                const response = await fetch(MOVIES_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const text = await response.text();
+                return text.trim().split('\n').map(line => {
+                    const parts = line.split(',');
+                    return { title: parts[0].trim(), videoUrl: parts[1].trim() };
+                });
+            } catch (error) {
+                console.error('Failed to fetch movie list:', error);
+                loader.textContent = 'Film listesi alınamadı. İnternetinizi kontrol edin.';
+                return null;
+            }
+        }
+
+        async function getTMDBData(movie) {
+            const url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}&language=tr-TR`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const result = data.results[0];
+            if (result) {
+                return { ...movie, ...result };
+            }
+            return null; // TMDB'de bulunamayanları atla
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const movies = await fetchMoviesFromFile();
+            if (!movies) return;
+
+            const moviePromises = movies.map(getTMDBData);
+            allMoviesData = (await Promise.all(moviePromises)).filter(Boolean); // null olanları filtrele
+
+            if (allMoviesData.length === 0) {
+                 loader.textContent = 'Gösterilecek film bulunamadı.';
+                 return;
+            }
+
+            renderMovies();
+            setupNavigation();
+
+            loader.style.display = 'none';
+            mainContainer.style.visibility = 'visible';
+        });
+        
+        function renderMovies() {
+            movieList.innerHTML = '';
+            allMoviesData.forEach(movie => {
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                if (movie.poster_path) {
+                    card.style.backgroundImage = `url(https://image.tmdb.org/t/p/w500${movie.poster_path})`;
+                }
+                movieList.appendChild(card);
+            });
+        }
+
+        function setupNavigation() {
+            document.addEventListener('keydown', handleKeydown);
+            updateFocus(true); // Sayfa açıldığında ilk elemana odaklan
+        }
+
+        function updateFocus(isInitial = false) {
+            const cards = document.querySelectorAll('.movie-card');
+            cards.forEach((card, index) => {
+                card.classList.toggle('focused', index === currentFocusIndex);
+            });
+
+            // Odaklanılan kartı ekranın ortasına getirecek şekilde kaydır
+            const focusedCard = cards[currentFocusIndex];
+            if (focusedCard) {
+                const scrollOffset = focusedCard.offsetLeft - (window.innerWidth / 2) + (focusedCard.offsetWidth / 2);
+                movieList.style.transform = `translateX(-${scrollOffset}px)`;
+                updateHero(allMoviesData[currentFocusIndex]);
+            }
+        }
+        
+        function updateHero(movie) {
+            if (!movie) return;
+            heroTitle.textContent = movie.title;
+            heroOverview.textContent = movie.overview || 'Açıklama bulunamadı.';
+            if (movie.backdrop_path) {
+                bgContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`;
+            } else {
+                bgContainer.style.backgroundImage = 'none';
+            }
+        }
+
+        function handleKeydown(e) {
+            if (playerContainer.style.display === 'flex') {
+                if (e.key === 'Escape' || e.key === 'Backspace') {
+                    closePlayer();
+                }
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowRight':
+                    currentFocusIndex = Math.min(currentFocusIndex + 1, allMoviesData.length - 1);
+                    break;
+                case 'ArrowLeft':
+                    currentFocusIndex = Math.max(currentFocusIndex - 1, 0);
+                    break;
+                case 'Enter':
+                    playMovie(allMoviesData[currentFocusIndex].videoUrl);
+                    break;
+            }
+            updateFocus();
+        }
+
+        function playMovie(url) {
+            playerContainer.style.display = 'flex';
+            videoPlayer.src = url;
+            videoPlayer.play();
+            videoPlayer.focus(); // Oynatıcı kontrollerine odaklan
+        }
+
+        function closePlayer() {
+            playerContainer.style.display = 'none';
+            videoPlayer.pause();
+            videoPlayer.src = '';
+        }
+    </script>
+
+</body>
+</html>
